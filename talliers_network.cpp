@@ -43,7 +43,7 @@ talliers_network::talliers_network(cppcoro::io_service &ioSvc, int8_t tallier_id
 
 static cppcoro::task<> stop_server(cppcoro::cancellation_source &canceller, cppcoro::single_consumer_event &end_vote) {
     co_await end_vote;
-    (std::cout << "vote ended" << std::endl).flush();
+    std::cout << "vote ended" << std::endl;
     canceller.request_cancellation();
 }
 
@@ -65,7 +65,7 @@ cppcoro::task<> talliers_network::server(cppcoro::cancellation_token ct) {
         set_socketopt(listeningSocket.native_handle());
         listeningSocket.bind(this->server_address);
         listeningSocket.listen();
-        (std::cout << "Server up" << std::endl).flush();
+        std::cout << "Server up" << std::endl;
 
         while (true) {
             auto connection = cppcoro::net::socket::create_tcpv4(ioSvc);
@@ -90,6 +90,7 @@ cppcoro::task<> talliers_network::handle_connection(cppcoro::net::socket sock) {
                 this->end_vote.set();
                 break;
             default:
+                assert(reply_id >= 0);
                 if (talliers_waiting & (1U << reply_id)) {
                     std::cout << "Loaded (recv) " << (int)reply_id << std::endl;
                     talliers[reply_id] = std::move(sock);
@@ -115,13 +116,13 @@ cppcoro::task<> talliers_network::handle_connection(cppcoro::net::socket sock) {
 }
 
 cppcoro::task<> talliers_network::connect(int8_t curr_id, cppcoro::cancellation_token ct) {
+    using namespace cppcoro::net;
     try {
         std::cout << "connect " << (int)curr_id << std::endl;
-        auto sock = cppcoro::net::socket::create_tcpv4(ioSvc);
+        auto sock = socket::create_tcpv4(ioSvc);
         set_socketopt(sock.native_handle());
         sock.bind(this->server_address);
-        auto address = cppcoro::net::ipv4_endpoint(cppcoro::net::ipv4_address::loopback(), port(curr_id));
-        co_await sock.connect(std::move(address), ct);
+        co_await sock.connect(ipv4_endpoint(ipv4_address::loopback(), port(curr_id)), ct);
 
         int8_t reply_id;
         co_await sock.send(&this->tallier_id, 1, ct);
