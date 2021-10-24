@@ -25,7 +25,7 @@ public:
     cppcoro::task<> build_collect();
     cppcoro::task<> close();
 
-    cppcoro::task<std::unique_ptr<utils::share[]>> exchange(uint16_t msg_id, std::unique_ptr<utils::share[]> shares);
+    cppcoro::task<std::unique_ptr<utils::share[]>> exchange(uint16_t msg_id, std::span<utils::share> shares);
 private:
     cppcoro::task<> server(cppcoro::cancellation_token ct);
     cppcoro::task<> handle_connection(cppcoro::net::socket sock);

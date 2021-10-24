@@ -1,6 +1,7 @@
 #ifndef VOTE_SECURE_UTILS_H
 #define VOTE_SECURE_UTILS_H
 
+#include <span>
 #include <memory>
 #include <cstdint>
 
@@ -11,6 +12,7 @@ namespace utils {
     }
 
     using share = uint32_t;
+    static_assert(sizeof (share) * 2 <= sizeof(uint64_t), "bad selection for share type");
     extern unsigned p;
     unsigned random_value();
 
@@ -19,11 +21,12 @@ namespace utils {
     share mod_inverse(share value);
     share modular_sqrt(share a);
     unsigned short ceil_sqrt(unsigned short val);
-    unsigned short ceil_log2(unsigned short val);
+    unsigned short ceil_log2(unsigned int val);
+    unsigned short block_size(unsigned int val);
     std::unique_ptr<share[]> vandermond_mat_inv_row(int N);
 
     std::unique_ptr<share[]> gen_shamir(uint32_t value, unsigned shares_count, unsigned threshold);
-    share resolve_shamir(std::unique_ptr<share[]> shares, unsigned shares_size);
+    share resolve_shamir(std::span<share> shares);
     std::unique_ptr<share[]> lagrange_polynomial_fan(unsigned count);
 };
 

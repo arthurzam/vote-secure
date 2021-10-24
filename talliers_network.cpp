@@ -163,7 +163,7 @@ cppcoro::task<> talliers_network::recv_loop(cppcoro::net::socket &sock, size_t i
     try {
         do {
             bytesRead = co_await sock.recv(buffer.get(), bufferSize, cancel_token);
-//            (std::cout << '[' << index << "] recv " << bytesRead << std::endl).flush();
+//            std::cout << '[' << index << "] recv " << bytesRead << std::endl;
             for (size_t idx = 0; idx < bytesRead; idx += sizeof(msg_format)) {
                 std::memcpy(&msg, &buffer[idx], sizeof(msg_format));
                 msg.msg_id = endian_number<uint16_t>::convert(msg.msg_id);
@@ -173,13 +173,13 @@ cppcoro::task<> talliers_network::recv_loop(cppcoro::net::socket &sock, size_t i
         } while (bytesRead > 0);
     } catch (const cppcoro::operation_cancelled &) {
         co_await sock.disconnect();
-        (std::cerr << "recv_loop " << index << "cancelled" << std::endl).flush();
+        std::cerr << "recv_loop " << index << "cancelled" << std::endl;
     } catch (const std::system_error &err) {
-        (std::cerr << "recv_loop(syserr) " << index << ":" << err.what() << std::endl).flush();
+        std::cerr << "recv_loop(syserr) " << index << ":" << err.what() << std::endl;
     }
 }
 
-cppcoro::task<std::unique_ptr<utils::share[]>> talliers_network::exchange(uint16_t msg_id, std::unique_ptr<utils::share[]> shares) {
+cppcoro::task<std::unique_ptr<utils::share[]>> talliers_network::exchange(uint16_t msg_id, std::span<utils::share> shares) {
     auto exchange_one = [](cppcoro::net::socket &sock, uint16_t msg_id, utils::share value) -> cppcoro::task<> {
         msg_format msg{msg_id, endian_number<utils::share>::convert(value)};
         co_await sock.send(&msg, sizeof (msg));
@@ -188,8 +188,8 @@ cppcoro::task<std::unique_ptr<utils::share[]>> talliers_network::exchange(uint16
     item.set(shares[tallier_id], tallier_id);
     msg_id = endian_number<uint16_t>::convert(msg_id);
     std::vector<cppcoro::task<>> tasks;
-    tasks.reserve(mpc_service::D);
-    for (int i = 0; i < mpc_service::D; i++)
+    tasks.reserve(shares.size());
+    for (int i = 0; i < shares.size(); i++)
         if (this->talliers[i])
             tasks.push_back(exchange_one(*this->talliers[i], msg_id, shares[i]));
     tasks.push_back(static_cast<cppcoro::task<>>(item));

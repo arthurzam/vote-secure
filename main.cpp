@@ -41,7 +41,7 @@ int main(int argc, const char *argv[]) {
                     tasks.reserve(33);
                     for (int i = 0; i < 32; i++)
                         tasks.push_back(service.resolve(msg_id + i, rnd[i]));
-                    tasks.push_back(service.fan_in_or(msg_id + 32, rnd.data(), rnd.data() + 32));
+                    tasks.push_back(service.fan_in_or(msg_id + 32, {rnd.data(), 32}));
                     auto res = co_await cppcoro::when_all(std::move(tasks));
 
                     std::string out = "{";
@@ -64,7 +64,7 @@ int main(int argc, const char *argv[]) {
                     std::cout << co_await service.resolve(i, co_await service.random_bit(i)) << std::endl;
                 };
 
-                for (int j = 0; j < 120; j++) {
+                for (int j = 0; j < 10; j++) {
                     std::vector<cppcoro::task<>> tasks;
                     tasks.reserve(100);
                     for (unsigned i = 0; i < 50; i++)

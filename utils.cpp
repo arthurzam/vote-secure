@@ -96,8 +96,13 @@ namespace utils {
         return (unsigned short)ceilf(sqrtf(val));
     }
 
-    unsigned short ceil_log2(unsigned short val) {
-        return (unsigned short)ceilf(log2f(val));
+    unsigned short ceil_log2(unsigned int val) {
+        return (unsigned short)ceil(log2(val));
+    }
+
+    unsigned short block_size(unsigned int val) {
+        auto base = ceil_sqrt(ceil_log2(val));
+        return base * base * 2;
     }
 
     std::unique_ptr<share[]> vandermond_mat_inv_row(int N) {
@@ -164,11 +169,11 @@ namespace utils {
         return shares;
     }
 
-    share resolve_shamir(std::unique_ptr<share[]> shares, unsigned shares_size) {
+    share resolve_shamir(std::span<share> shares) {
         uint64_t sum = 0;
-        for (int i = 0; i < shares_size; i++) {
+        for (int i = 0; i < shares.size(); i++) {
             uint64_t numerator = 1, denominator = 1;
-            for (int j = 0; j < shares_size; j++) {
+            for (int j = 0; j < shares.size(); j++) {
                 if (i == j) continue;
                 numerator *= (j + 1);
                 if (numerator > (1UL << 32))
