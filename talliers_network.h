@@ -23,7 +23,10 @@ class talliers_network {
 public:
     talliers_network(cppcoro::io_service &ioSvc, int8_t tallier_id);
     cppcoro::task<> build_collect();
-    cppcoro::task<> close();
+    auto close() {
+        m_stop_recv.request_cancellation();
+        return scope.join();
+    }
 
     cppcoro::task<std::unique_ptr<utils::share[]>> exchange(uint16_t msg_id, std::span<utils::share> shares);
 private:

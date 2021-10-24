@@ -59,11 +59,6 @@ cppcoro::task<> talliers_network::build_collect() {
     co_await cppcoro::when_all(std::move(tasks));
 }
 
-cppcoro::task<> talliers_network::close() {
-    m_stop_recv.request_cancellation();
-    co_await scope.join();
-}
-
 cppcoro::task<> talliers_network::server(cppcoro::cancellation_token ct) {
     try {
         auto listeningSocket = cppcoro::net::socket::create_tcpv4(ioSvc);
