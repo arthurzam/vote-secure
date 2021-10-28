@@ -20,7 +20,7 @@ template <> struct endian_number<uint8_t> {
 };
 
 template <> struct endian_number<uint16_t> {
-    static uint32_t convert(uint16_t num) {
+    static uint16_t convert(uint16_t num) {
         if constexpr(std::endian::native == std::endian::big)
             return num;
         else {
