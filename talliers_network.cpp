@@ -80,8 +80,8 @@ cppcoro::task<> talliers_network::server(cppcoro::cancellation_token ct) {
 cppcoro::task<> talliers_network::handle_connection(cppcoro::net::socket sock) {
     try {
         int8_t reply_id;
-        co_await sock.send(&this->tallier_id, 1);
-        co_await sock.recv(&reply_id, 1);
+        co_await cppcoro::when_all(sock.send(&this->tallier_id, 1),
+                                   sock.recv(&reply_id, 1));
         switch (reply_id) {
             case -1: // Voter
                 break;
